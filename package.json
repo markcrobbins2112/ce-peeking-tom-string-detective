@@ -1,9 +1,10 @@
 {
-	"name": "peeking-tom-string-detective",
+	"name": "ce-peeking-tom-string-detective",
 	"displayName": "Peeping Tom String Detective",
 	"version": "1.0.0",
 	"description": "PTSD - Context harvesting peek view engine for lines, identifiers, and quotes.",
 	"license": "MIT",
+	"author": "markrobbins",
 	"publisher": "markrobbins",
 	"engines": {
 		"vscode": "^1.80.0"
@@ -45,12 +46,12 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/markchristianrobbins/peeking-tom-string-detective.git"
+		"url": "https://github.com/markcrobbins2112/ce-peeking-tom-string-detective.git"
 	},
 	"bugs": {
-		"url": "https://github.com/markchristianrobbins/peeking-tom-string-detective/issues"
+		"url": "https://github.com/markcrobbins2112/ce-peeking-tom-string-detective/issues"
 	},
-	"homepage": "https://github.com/markchristianrobbins/peeking-tom-string-detective#readme",
+	"homepage": "https://github.com/markcrobbins2112/ce-peeking-tom-string-detective#readme",
 	"activationEvents": [],
 	"contributes": {
 		"commands": [
