@@ -1,4 +1,8 @@
-# Testing
+---
+title: TESTING
+---
+
+# TESTING
 
 You can use this interactive test sheet directly inside VS Code to verify that all systems are fully functional. Put your cursor on these checkbox lines, and mark them done!
 

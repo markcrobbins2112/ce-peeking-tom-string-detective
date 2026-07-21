@@ -1,4 +1,8 @@
-# Read Me
+---
+title: README
+---
+
+# README
 <!-- template
 description from package
 longer description
