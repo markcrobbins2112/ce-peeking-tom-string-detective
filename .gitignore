@@ -4,3 +4,4 @@ test-fixture/
 *.vsix
 *.log
 test-1.jsonc
+desktop.ini
