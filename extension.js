@@ -1,5 +1,16 @@
 const vscode = require('vscode');
 
+let outputChannel;
+
+function logMsg(message, level = "INFO") {
+	const timestamp = new Date().toISOString().split('T')[1].replace('Z', '');
+	const formatted = `[${timestamp}] [${level}] [PTSD-ENGINE] ${message}`;
+	if (outputChannel) {
+		outputChannel.appendLine(formatted);
+	}
+	console.log(formatted);
+}
+
 // --- HELPER EXTRACTORS ---
 function getExtractors(document, position) {
 	const lineText = document.lineAt(position.line).text;
@@ -65,9 +76,9 @@ function getExtractors(document, position) {
 	let match;
 	while ((match = idRegex.exec(lineText)) !== null) {
 		const start = match.index;
-		const end = start + match.length;
+		const end = start + match[0].length;
 		if (charIdx >= start && charIdx <= end) {
-			identifier = match;
+			identifier = match[0];
 			break;
 		}
 	}
@@ -131,7 +142,12 @@ function findMatches(document, type, tokens) {
 	const totalLines = document.lineCount;
 	const target = tokens[type];
 
-	if (!target) return results;
+	logMsg(`Executing findMatches for target type '${type}': "${target || ''}" across ${totalLines} lines...`, "DEBUG");
+
+	if (!target) {
+		logMsg(`Target token for '${type}' is empty or null. Aborting findMatches.`, "WARN");
+		return results;
+	}
 
 	for (let i = 0; i < totalLines; i++) {
 		const rawText = document.lineAt(i).text;
@@ -155,12 +171,14 @@ function findMatches(document, type, tokens) {
 			});
 		}
 	}
+	logMsg(`findMatches completed: Found ${results.length} matching lines for '${type}'.`, "INFO");
 	return results;
 }
 
 // --- VERB SELECTION PICKER ---
 async function promptVerbAndExecute(editor, chosenType, matches, tokens) {
 	const targetValue = tokens[chosenType];
+	logMsg(`Presenting Step 2 Action Verb QuickPick for ${matches.length} matches of [${chosenType}: "${targetValue}"]...`, "INFO");
 	const verbSelection = await vscode.window.showQuickPick([
 		{ label: '🔍 Browse via QuickPick', detail: `Fluidly scroll matching lines for "${targetValue}"`, value: 'browse' },
 		{ label: '⬇️ Next Instance Match', detail: 'Leap cursor down onto the subsequent match.', value: 'next' },
@@ -169,36 +187,69 @@ async function promptVerbAndExecute(editor, chosenType, matches, tokens) {
 		{ label: '💉 Inject Matching Lines Below', detail: 'Insert text array directly beneath your line position.', value: 'inject' }
 	], { placeHolder: `⚡ Action Verb: Choose how to handle ${matches.length} matches for [${chosenType}: "${targetValue}"]` });
 
-	if (!verbSelection) return;
+	if (!verbSelection) {
+		logMsg("User cancelled Step 2 action verb selection.", "INFO");
+		return;
+	}
 
+	logMsg(`User selected action verb: '${verbSelection.value}'. Proceeding to execution...`, "INFO");
 	executeVerb(editor, chosenType, verbSelection.value, matches, editor.selection.active.line);
 }
 
 // --- MAIN EXTENSION ACTIVATION ---
 function activate(context) {
+	outputChannel = vscode.window.createOutputChannel("PTSD String Detective");
+	context.subscriptions.push(outputChannel);
+	outputChannel.show(true); // Bring output channel to foreground on startup without stealing editor focus
+
+	logMsg("==========================================================================", "STARTUP");
+	logMsg("🚀 PTSD String Detective v1.0.1 Extension Host Activating...", "STARTUP");
+	logMsg(`Environment: Node ${process.version}, VS Code ${vscode.version || 'Unknown'}`, "STARTUP");
+	logMsg("Output Channel 'PTSD String Detective' initialized and displayed.", "STARTUP");
+
 	const searchTypes = ['lineExact', 'lineWithin', 'quoted', 'identifier', 'word'];
 	const verbs = ['browse', 'next', 'prev', 'copy', 'inject'];
 
+	logMsg("Registering master command: 'ptsd.orchestrate'...", "REGISTER");
 	// 1. Master Dual Picker Orchestrator (Filtered to omit empty choices)
 	let orchestrateCmd = vscode.commands.registerCommand('ptsd.orchestrate', async () => {
+		logMsg(">>> COMMAND TRIGGERED: 'ptsd.orchestrate' <<<", "EXEC");
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) return;
+		if (!editor) {
+			logMsg("Execution halted: No active text editor found.", "ERROR");
+			vscode.window.showWarningMessage('No active text editor found. Please open and focus a document to use PTSD.');
+			return;
+		}
 
+		logMsg(`Active document: "${editor.document.fileName}" (Lang: ${editor.document.languageId}), Cursor: Ln ${editor.selection.active.line + 1}, Col ${editor.selection.active.character}`, "DEBUG");
 		const tokens = getExtractors(editor.document, editor.selection.active);
-		const pickerOptions = [
-			{ label: 'Exact Match', description: `"${tokens.lineExact}"`, value: 'lineExact' },
-			{ label: 'Trimmed Line Within', description: `"${tokens.lineWithin}"`, value: 'lineWithin' }
-		];
+		logMsg(`Harvested tokens: exact="${tokens.lineExact}", within="${tokens.lineWithin}", quoted="${tokens.quoted}", id="${tokens.identifier}", word="${tokens.word}"`, "DEBUG");
 
+		const pickerOptions = [];
+		if (tokens.lineExact) pickerOptions.push({ label: 'Exact Match', description: `"${tokens.lineExact}"`, value: 'lineExact' });
+		if (tokens.lineWithin) pickerOptions.push({ label: 'Trimmed Line Within', description: `"${tokens.lineWithin}"`, value: 'lineWithin' });
 		if (tokens.quoted) pickerOptions.push({ label: 'Quoted Text Within', description: `"${tokens.quoted}"`, value: 'quoted' });
 		if (tokens.identifier) pickerOptions.push({ label: 'Identifier Within', description: `"${tokens.identifier}"`, value: 'identifier' });
 		if (tokens.word) pickerOptions.push({ label: 'Word Within', description: `"${tokens.word}"`, value: 'word' });
 
-		const typeSelection = await vscode.window.showQuickPick(pickerOptions, { placeHolder: '🧠 STEP 1: Select search target type' });
-		if (!typeSelection) return;
+		logMsg(`Valid non-empty search target options: ${pickerOptions.length}`, "INFO");
+		if (pickerOptions.length === 0) {
+			logMsg("Execution halted: No valid text tokens found under cursor.", "WARN");
+			vscode.window.showWarningMessage('No valid text tokens found under cursor.');
+			return;
+		}
 
+		logMsg("Presenting Step 1 QuickPick target selection...", "INFO");
+		const typeSelection = await vscode.window.showQuickPick(pickerOptions, { placeHolder: '🧠 STEP 1: Select search target type' });
+		if (!typeSelection) {
+			logMsg("User cancelled Step 1 target selection.", "INFO");
+			return;
+		}
+
+		logMsg(`Step 1 accepted: User selected target type '${typeSelection.value}' -> "${tokens[typeSelection.value]}"`, "INFO");
 		const matches = findMatches(editor.document, typeSelection.value, tokens);
 		if (matches.length === 0) {
+			logMsg(`No matching instances found for '${typeSelection.value}'.`, "WARN");
 			vscode.window.showWarningMessage('No matching instances found.');
 			return;
 		}
@@ -207,20 +258,28 @@ function activate(context) {
 	});
 	context.subscriptions.push(orchestrateCmd);
 
+	logMsg(`Registering 5 standalone search loops: ${searchTypes.join(', ')}...`, "REGISTER");
 	// 2. Standalone Base Search Types Loops (Search Type -> Verb Picker)
 	searchTypes.forEach(type => {
 		let searchCmd = vscode.commands.registerCommand(`ptsd.search.${type}`, async () => {
+			logMsg(`>>> COMMAND TRIGGERED: 'ptsd.search.${type}' <<<`, "EXEC");
 			const editor = vscode.window.activeTextEditor;
-			if (!editor) return;
+			if (!editor) {
+				logMsg("Execution halted: No active text editor found.", "ERROR");
+				vscode.window.showWarningMessage('No active text editor found. Please open and focus a document to use PTSD.');
+				return;
+			}
 
 			const tokens = getExtractors(editor.document, editor.selection.active);
 			if (!tokens[type]) {
+				logMsg(`No valid target token found for "${type}" search.`, "WARN");
 				vscode.window.showWarningMessage(`No valid target token found for "${type}" search.`);
 				return;
 			}
 
 			const matches = findMatches(editor.document, type, tokens);
 			if (matches.length === 0) {
+				logMsg(`No matches found for target: "${tokens[type]}"`, "WARN");
 				vscode.window.showWarningMessage(`No matches found for target: "${tokens[type]}"`);
 				return;
 			}
@@ -230,29 +289,47 @@ function activate(context) {
 		context.subscriptions.push(searchCmd);
 	});
 
+	logMsg(`Registering 25 direct action combinations (${searchTypes.length} targets × ${verbs.length} verbs)...`, "REGISTER");
 	// 3. Standalone Direct Actions Combinations (Direct Mapping: No Pickers)
 	searchTypes.forEach(type => {
 		verbs.forEach(verb => {
 			let comboCmd = vscode.commands.registerCommand(`ptsd.${type}.${verb}`, async () => {
+				logMsg(`>>> COMMAND TRIGGERED: 'ptsd.${type}.${verb}' <<<`, "EXEC");
 				const editor = vscode.window.activeTextEditor;
-				if (!editor) return;
+				if (!editor) {
+					logMsg("Execution halted: No active text editor found.", "ERROR");
+					vscode.window.showWarningMessage('No active text editor found. Please open and focus a document to use PTSD.');
+					return;
+				}
 
 				const tokens = getExtractors(editor.document, editor.selection.active);
-				if (!tokens[type]) return;
+				if (!tokens[type]) {
+					logMsg(`No valid target token found for "${type}" action.`, "WARN");
+					vscode.window.showWarningMessage(`No valid target token found for "${type}" action.`);
+					return;
+				}
 
 				const matches = findMatches(editor.document, type, tokens);
-				if (matches.length === 0) return;
+				if (matches.length === 0) {
+					logMsg(`No matching instances found for "${tokens[type]}".`, "WARN");
+					vscode.window.showWarningMessage(`No matching instances found for "${tokens[type]}".`);
+					return;
+				}
 
 				executeVerb(editor, type, verb, matches, editor.selection.active.line);
 			});
 			context.subscriptions.push(comboCmd);
 		});
 	});
+
+	logMsg("✅ PTSD String Detective activation complete! All 31 commands successfully subscribed.", "SUCCESS");
+	logMsg("==========================================================================", "STARTUP");
 }
 
 // --- VERB ROUTER EXECUTION MATRIX ---
 async function executeVerb(editor, type, verb, matches, currentLineIdx) {
 	const document = editor.document;
+	logMsg(`>>> EXECUTE VERB: '${verb}' on target type '${type}' (${matches.length} matches) <<<`, "EXEC");
 
 	switch (verb) {
 		case 'browse': {

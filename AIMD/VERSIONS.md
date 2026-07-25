@@ -45,6 +45,18 @@ title: VERSIONS
 ## 🚀 Stable Releases & Milestones
 <a id="a-stablereleasesmilestones"></a>[TOC](#toc-stablereleasesmilestones)
 
+### 🏷️ v1.0.1 (2026-07-25) - Activation & Editor State Fixes
+<a id="a-v10120260725activationeditorstatefixes"></a>[TOC](#toc-v10120260725activationeditorstatefixes)
+
+- **Summary:** Patch update resolving command non-responsiveness where executing `ptsd.orchestrate` produced no UI feedback or activation in certain environments.
+- **Fixed / Patched:**
+  - Populated `activationEvents` in `package.json` with all 31 contributed commands and `onStartupFinished`, ensuring reliable runtime initialization across all VS Code engines and preview environments.
+  - Replaced silent `return` statements across all command handlers with clear UI warning popups (`vscode.window.showWarningMessage`) when triggered without an active text editor focused.
+  - Corrected line 70 identifier extraction where `RegExp.exec()` array objects were assigned instead of primitive string tokens (`match[0]`), preventing downstream template literal and search crashes.
+  - Added empty-token filtering in `ptsd.orchestrate` to prevent searching for blank strings on empty lines.
+
+---
+
 ### 🏷️ v1.0.0 (2026-07-25) - Baseline Production Launch
 <a id="a-v10020260725baselineproductionlaunch"></a>[TOC](#toc-v10020260725baselineproductionlaunch)
 

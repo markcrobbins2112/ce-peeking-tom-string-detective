@@ -5,3 +5,4 @@ test-fixture/
 *.log
 test-1.jsonc
 desktop.ini
+$*
