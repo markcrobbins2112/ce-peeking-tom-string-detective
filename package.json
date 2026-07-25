@@ -25,12 +25,6 @@
 		"extension.js",
 		"icon.jpg",
 		"README.md",
-		"AILOG.md",
-		"AGENTS.md",
-		"FEATURES.md",
-		"MANUAL.md",
-		"SPEC.md",
-		"TESTING.md",
 		"LICENSE"
 	],
 	"scripts": {

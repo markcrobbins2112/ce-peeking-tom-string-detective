@@ -3,23 +3,27 @@ title: BUILD
 ---
 
 <!-- TEMPLATE: BUILD.template.md -->
-<!--
-BUILD
-Any text bounded by double curly braces {{like this}} is a placeholder for you to fill out.
-Replace those placeholders with real paths, rules, and project constraints.
-
-INSTRUCTIONS FOR THE AI AGENT:
-This file serves as the system construction guide. It must document building blocks,
-dependencies installation commands, target directory structures, packing pipelines,
-and runtime execution.
--->
-
+<!-- BUILD Any text bounded by double curly braces like this is a placeholder for you to fill out. Replace those placeholders with real paths, rules, and project constraints. INSTRUCTIONS FOR THE AI AGENT: This file serves as the system construction guide. It must document building blocks, dependencies installation commands, target directory structures, packing pipelines, and runtime execution. -->
 <!-- markdownlint-disable MD013 -->
 
 # BUILD
 
-## 📑 AI Primary Files
+<!-- TOC location -->
+## 🔍 Table of Contents
+<!-- Maintained by script -->
+- [BUILD](#a-build) <a id="toc-build"></a> ^toc-build
+  - [📑 AI Primary Files](#a-aiprimaryfiles) <a id="toc-aiprimaryfiles"></a> ^toc-aiprimaryfiles
+  - [📋 Prerequisites & Toolchain Setup](#a-prerequisitestoolchainsetup) <a id="toc-prerequisitestoolchainsetup"></a> ^toc-prerequisitestoolchainsetup
+  - [🛠️ Build & Packaging Pipeline](#a-buildpackagingpipeline) <a id="toc-buildpackagingpipeline"></a> ^toc-buildpackagingpipeline
+    - [📦 Key Components](#a-keycomponents) <a id="toc-keycomponents"></a> ^toc-keycomponents
+  - [🚀 Execution & Packing Commands](#a-executionpackingcommands) <a id="toc-executionpackingcommands"></a> ^toc-executionpackingcommands
+  - [🧪 Post-Build Verification Rules](#a-postbuildverificationrules) <a id="toc-postbuildverificationrules"></a> ^toc-postbuildverificationrules
+  - [🚀 Go to...](#a-goto) <a id="toc-goto"></a> ^toc-goto
 
+<a id="a-build"></a>[TOC](#toc-build)
+
+## 📑 AI Primary Files
+<a id="a-aiprimaryfiles"></a>[TOC](#toc-aiprimaryfiles)
 - 🔹 [AGENTS.md](../AGENTS.md)
 - 🔹 [ARCHIVE.md](ARCHIVE.md)
 - 🔸 [BUILD.md](BUILD.md)
@@ -36,87 +40,72 @@ and runtime execution.
 - 🔹 [VERSIONS.md](VERSIONS.md)
 
 ---
-
-<!-- TOC location -->
-## 🔍 Table of Contents
-<!-- Maintained by script -->
 
 ---
 
 ## 📋 Prerequisites & Toolchain Setup
-
-- **Compiler/Runtime:** {{Specify runtime, e.g., Node.js v20.x, GCC v13.2, Aut2Exe v3.3+}}
+<a id="a-prerequisitestoolchainsetup"></a>[TOC](#toc-prerequisitestoolchainsetup)
+- **Compiler/Runtime:** Node.js runtime environment (LTS Recommended, v18.x or newer)
 - **Global System Variables Required:**
-<!--
-Dependency Item List
--->
-<!-- template: dependency item
-  - `{{name}}`: {{value}}
-    - {{description}}
--->
+  - `NODE_ENV`: production / development
+    - Toggles developer verbosity logging hooks inside the workspace console stack.
 
 ---
 
 ## 🛠️ Build & Packaging Pipeline
-<!--
-Detail the high-level architecture of the build system.
-Mention variables compilation pathways, compiler tools, preprocessors, etc.
-Describe the compilation pipeline here, with step-by-step logic detailing how source code converts into running software
-Pipeline Item List
--->
-<!-- template: pipeline item
-- **{{name}}:** {description}
--->
+<a id="a-buildpackagingpipeline"></a>[TOC](#toc-buildpackagingpipeline)
+The building lifecycle translates standard JavaScript entry scripts and operational configuration files into a self-contained, offline-ready VS Code Extension Archive (.vsix). Because this extension is designed stateless and package-minimized, no heavy transpilers (like Webpack or Babel) are introduced, keeping compilation lightweight and dependent solely on native system packages.
+
+- **Dependency Tree Resolution:** NPM parses package descriptors to assemble an isolated node modules cache.
+- **VSIX Packaging Allocation:** The VSCE packaging CLI structures asset payloads into an integrated Open XML zip bundle mapping to target VS Code marketplace specifications.
 
 ---
 
 ### 📦 Key Components
-<!--
-Purpose of files/directory inside the compilation chain
-Dependencies, binary packages, or transpilers required for completion
-Component Item List
--->
-<!-- template: component item
-- **`{{name}}`**: {{purpose}}
--->
+<a id="a-keycomponents"></a>[TOC](#toc-keycomponents)
+- **`extension.js`**: Core module containing all procedural regex algorithms, match index engines, and provider systems.
+- **`package.json`**: Active metadata engine mapping available extension activation hooks, command identifiers, menus, and keyboard short-cuts.
+- **`@vscode/test-electron`**: Isolated integration test wrapper utilized to mock active editor contexts during automated test execution.
 
 ---
 
 ## 🚀 Execution & Packing Commands
-<!--
-List the literal, usable CLI shell commands for restoring packages,
-launching development modes, linting files, and packaging production bundles.
-List of Packing Steps
-- Install Dependencies
-- Local Dev Server / Watch Mode
-- Verification / Linting
-- Production Package Compilation
--->
-<!-- template: packing steps
-- **{{step title}}**:
+<a id="a-executionpackingcommands"></a>[TOC](#toc-executionpackingcommands)
+
+- **Install Dependencies**:
   ```bash
-  {{step commands}}
+  npm install
   ```
--->
+- **Local Dev Server / Watch Mode**:
+  ```bash
+  # Launches compilation tasks or opens the extension codebase inside the active window.
+  # Pressing F5 launches the Extension Development Host window instantly.
+  code .
+  ```
+- **Verification / Linting**:
+  ```bash
+  # Formats files and checks basic syntax health according to rulesets.
+  npm run lint
+  ```
+- **Production Package Compilation**:
+  ```bash
+  # Packs extension assets into a native, deployable offline .vsix installer block.
+  npx vsce package
+  ```
 
 ---
 
 ## 🧪 Post-Build Verification Rules
-<!--
-List the post-build checks and rules
-List of Verification Steps
-- Size Checking
-- Path Verification
-- Smoke Test Command
--->
-<!-- template: verification step
-- 1. **{{step name}}:** {{step description}}
--->
+<a id="a-postbuildverificationrules"></a>[TOC](#toc-postbuildverificationrules)
+
+- 1. **Size Checking:** Verify the compiled `.vsix` archive stays under 2MB to preserve its lightweight, minimal footprint.
+- 2. **Path Verification:** Check that the `package.json` entry field points directly to the active `extension.js` script root.
+- 3. **Smoke Test Command:** Run `npm run test` against the generated workspace components to verify the extraction regex patterns run correctly before publishing.
 
 ---
 
 ## 🚀 Go to...
-
+<a id="a-goto"></a>[TOC](#toc-goto)
 - 🔹 [AGENTS.md](../AGENTS.md)
 - 🔹 [ARCHIVE.md](ARCHIVE.md)
 - 🔸 [BUILD.md](BUILD.md)
@@ -131,5 +120,4 @@ List of Verification Steps
 - 🔹 [TERMS.md](TERMS.md)
 - 🔹 [TESTING.md](TESTING.md)
 - 🔹 [VERSIONS.md](VERSIONS.md)
-
 <!-- TEMPLATE: BUILD.template.md -->
