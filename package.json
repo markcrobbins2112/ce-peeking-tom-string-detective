@@ -1,7 +1,7 @@
 {
 	"name": "ce-peeking-tom-string-detective",
 	"displayName": "Peeking Tom String Detective",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"description": "PTSD - Context harvesting peek view engine for lines, identifiers, and quotes.",
 	"license": "MIT",
 	"author": "markrobbins",
